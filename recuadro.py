@@ -123,7 +123,7 @@ if cap.isOpened():
 
                     nuevoFrame = cv2.warpPerspective(edificio,matriz,(framew,frameh))
                     
-                    nuevo = mezcla(nuevoFrame, frame                                                                                                                                                                                                                                                                                                                                            )
+                    nuevo = mezcla(nuevoFrame, frame)
                 else  :  
                     print("malo")
 

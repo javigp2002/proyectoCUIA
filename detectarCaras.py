@@ -55,5 +55,17 @@ if cap.isOpened():
             
             
             #write code that makes a simple interface where the main stream is the cv2.imshow and a button section on its right
+            #the buttons should be:
+            # - freeze: freezes the frame and allows the user to select a face
+            # - add: adds the face to the database
+            # - delete: deletes the face from the database
+            # - exit: exits the program
+            # - save: saves the database
+            # - load: loads the database
+            # - train: trains the database
+
+
+            
+
             
 
