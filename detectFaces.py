@@ -5,10 +5,16 @@ import pandas as pd
 import face_recognition as face
 import os
 import json
+import threading
+import time
 
 class DetectaCaras:
     directorioCodigos = ""
     cods = []
+    estaDetectando = False
+    haEncontrado= False
+    nombreUsuario = ""
+    backGround = ""
 
     def __init__(self):
         directorioActual = os.path.abspath("")
@@ -17,7 +23,12 @@ class DetectaCaras:
         self.directorioCodigos= os.path.join(directorioActual, carpetaJson)
         self.cods = []
         self.nameCods =[]
+        self.backGrounds = []
         self.codificarImagenes()
+        self.estaDetectando = False
+        self.haEncontrado = False
+        self.nombreUsuario = ""
+        self.backGround = ""
 
 
     #codificamos las imagenes en CODS
@@ -31,25 +42,42 @@ class DetectaCaras:
 
             self.cods.append(codificacionActual)
             self.nameCods.append(nombreActual)
+            self.backGrounds.append(data2['background'])
 
 
-    #pasado un frame, devuelve las caras que detecta
-    def detectarCaras(self, frame):
-        imagen = frame.copy()
-        imagenrgb = cv2.cvtColor(imagen, cv2.COLOR_BGR2RGB)
+    def runDetectCaras(self, frame):
+        #print ("hebra detectarCaras: ",threading.get_ident())
+
+        imagenrgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         caras = face.face_locations(imagenrgb, model='hog')
         codificacionesFrameActual = face.face_encodings(imagenrgb, caras, model='large')
 
         if caras is not None:
-            for i in range (len(caras)):
+            comparando = True
+
+            for i in range (len(caras)) :
                 codificaciones = face.compare_faces(self.cods, codificacionesFrameActual[i], tolerance=0.5)
-                
+                if (comparando == False):
+                    break
+
                 #por cada cara buscamos en las codificaciones que tenemos almacenadas
                 for j in range (len(codificaciones)):
                     if codificaciones[j]:
-                        print(self.nameCods[j])
-                        return True
+                        self.nombreUsuario = self.nameCods[j]
+                        comparando = False
+                        self.haEncontrado = True
+                        self.backGround = self.backGrounds[j]
+                        break
+        self.estaDetectando = False
+
+    #pasado un frame, devuelve las caras que detecta
+    def detectarCaras(self, frame):
+        if self.estaDetectando or self.haEncontrado:
+            return 
+        self.estaDetectando = True
         
+        #rendimiento Lento -> threading
+        threading.Thread(target=self.runDetectCaras, args=(frame,), name = "detectarCaras").start()        
 
 
 

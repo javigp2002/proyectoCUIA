@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import json
 import os
+import time
 
 def mezcla(edificio, frame):
 
@@ -37,14 +38,22 @@ class Edificio:
     frameh = None
     framew = None
     F = None
+    bf_matcher = None
+    nombreEdificioWikipedia = ""
+    ultimoEdificioWikipedia = ""
 
+    def __init__(self):
+        self.F = cv2.SIFT_create()
+        self.bf_matcher = cv2.BFMatcher()
+        self.nombreEdificioWikipedia = ""
+        self.ultimoEdificioWikipedia = ""
 
-    def extraerDatosNuevoEdificio(self):
+    def sextraerDatosNuevoEdificio(self):
         
         directorioActual = os.path.abspath("")
 
         carpetaJson = "KPJsons"
-        nombreImagen = "arucoCalb"
+        nombreImagen = "TemploSaturnoAhora"
         jsonExt =  ".json"
 
         archivoIntroducir=os.path.join(directorioActual, carpetaJson, nombreImagen + jsonExt)
@@ -65,43 +74,44 @@ class Edificio:
         imgw = data2["imgw"]
         imgh = data2["imgh"]
         self.nuevoEdificio = cv2.resize(self.nuevoEdificio, (imgw,imgh))
+        self.ultimoEdificioWikipedia = data2["nombreEdificioWikipedia"]
 
     # tiene que ejecutarse previamente la funcion ExtraerDatosself.nuevoEdificio
     def cambiarFrame(self, frame):
-        F = cv2.SIFT_create()
-        
-        bf_matcher = cv2.BFMatcher()
 
         gris = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         # Realiza la deteccion y descripcion de caracteristicas en la imagen
         # en escala de grises
-        kp, desc = F.detectAndCompute(gris, None)
+        # esta es la funcion que requiere el mayor tiempo de ejecucion
+        #tini = time.time()
+        kp, desc = self.F.detectAndCompute(gris, None)
+        #print ("\t\thomografia 2:", time.time()-tini)
 
         #k es el numero de vecinos más creacnos para la caracteristica
-        coincidencias = bf_matcher.knnMatch(self.descimg, desc, k=2)
-
+        coincidencias = self.bf_matcher.knnMatch(self.descimg, desc, k=2)
         good = []
         for m, n in coincidencias:
             if m.distance < 0.5*n.distance:
                 good.append([m])
         nuevo = frame
-        
+
         if len(good)>8 :
             origenes = []
             destinos = []
+
+            self.nombreEdificioWikipedia =  self.ultimoEdificioWikipedia
             
+            #escogemos los puntos caracteristicos de la imagen y del frame
             origen = np.float32([self.kpimg[m[0].queryIdx].pt for m in good]).reshape(-1,1,2)
             destino = np.float32([kp[m[0].trainIdx].pt for m in good]).reshape(-1,1,2)
 
-            mascaraa = []
             matriz, mascara = cv2.findHomography(origen, destino, cv2.RANSAC, 5.0)
-
             if (matriz is not None):
-                matches_mask = mascara.ravel().tolist() 
                 edificio = cv2.cvtColor(self.nuevoEdificio,cv2.COLOR_BGR2BGRA)
                 nuevoFrame = cv2.warpPerspective(edificio,matriz,(self.framew,self.frameh))
                 nuevo = mezcla(nuevoFrame, frame)
+                
 
-            
+
         return nuevo
 

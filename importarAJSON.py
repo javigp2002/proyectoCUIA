@@ -8,10 +8,10 @@ import os
 directorioActual = os.path.abspath("")
 
 carpetaImagen = "imagenes"
-nombreImagen = "arucoCalb"
-extensionImagen = ".png"
+nombreImagen = "TemploSaturnoAhora"
+extensionImagen = ".jpg"
 
-nombreImagenNueva = "javi"
+nombreImagenNueva = "TemploSAturnoAntes"
 extensionImagenNueva = ".jpg"
 
 imagenAJson=os.path.join(directorioActual, carpetaImagen, nombreImagen + extensionImagen)
@@ -36,6 +36,7 @@ data = {
     "imgh": imgh,
     "imgw": imgw ,
     "imagenLigada": imgLigada
+    #"nombreWikipedia":
 }
 
 carpetaJson = "KPJsons"
